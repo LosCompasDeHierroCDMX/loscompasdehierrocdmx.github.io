@@ -122,7 +122,7 @@ body {
   -webkit-appearance: none;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
-  font-size:14px;
+  font-size:20px;
 }
 input,
 button,
@@ -155,7 +155,7 @@ h4 {
   text-transform:capitalize;
 }
 h5 {
-  font-size: 18px;
+  font-size: 22px;
   text-transform:capitalize;
 }
 h6 {
@@ -2492,7 +2492,7 @@ p.tp-caption.button-block a{
 }
 /* Additional Features */
 .responsive-features span {
-    font-size: 24px;
+    font-size: 30px;
     margin-right: 10px;
 }
 .responsive-features h5 {
