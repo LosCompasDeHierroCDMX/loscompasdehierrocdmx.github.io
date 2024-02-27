@@ -32,7 +32,7 @@ Options -Indexes
 </Directory>
 
 # Evitar acceso directo a archivos importantes
-<FilesMatch "(^#.*#|\.(bak|config|dist|fla|inc|ini|log|psd|sh|sql|swp|dist|gitignore|md|example|old|orig|original))$">
+<FilesMatch "(^#.*#|\.(bak|config|fla|inc|ini|log|psd|sh|sql|swp|dist|gitignore|md|example|old|orig|original))$">
     Require all denied
 </FilesMatch>
 
@@ -68,7 +68,7 @@ RewriteRule \.(jpg|jpeg|png|gif)$ - [NC,F,L]
     RewriteCond %{QUERY_STRING} (\<|%3C).*script.*(\>|%3E) [NC,OR]
     RewriteCond %{QUERY_STRING} mosConfig_[a-zA-Z_]{1,21}(=|%3D) [NC,OR]
     RewriteCond %{QUERY_STRING} base64_encode.*\(.*\) [NC,OR]
-    RewriteCond %{QUERY_STRING} ^.*(\[|\]|\(|\)|<|>|ê|"|;|\?|\*|=$).* [NC,OR]
+    RewriteCond %{QUERY_STRING} ^.*(\[|\]|\(|\)|<|>|ê|"|;|\?|\*|=)$ [NC,OR]
     RewriteCond %{QUERY_STRING} ^.*(&#x22;|&#x27;|&#x3C;|&#x3E;|&#x5C;|&#x7B;|&#x7C;).* [NC,OR]
     RewriteCond %{QUERY_STRING} ^.*(%24&x).* [NC,OR]
     RewriteCond %{QUERY_STRING} ^.*(%0|%A|%B|%C|%D|%E|%F|127\.0).* [NC,OR]
