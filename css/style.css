@@ -2949,8 +2949,8 @@ div.count-number:before{
     color: #1e1e1e;
     display: block;
     left: 55px;
-    margin: 0 15px 0 0;
-    position: absolute;
+    /*margin: 0 15px 0 0;
+    position: absolute;*/
     text-align: center;
     text-decoration: none;
     transition: opacity 0.2s linear 0s;
@@ -2964,9 +2964,6 @@ div.count-number:before{
     color: #171717;
     display: inline-block;
     transition: opacity 0.2s linear 0s;
-}
-.item-box a {
-    margin-left: 50px;
 }
 .item-box.icons-circle a,
 .item-box.icons-rounded a,
