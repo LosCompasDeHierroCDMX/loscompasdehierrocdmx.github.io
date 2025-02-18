@@ -241,10 +241,6 @@ ul.arrow-style li:before{
 a {
   color: #171717;
 }
-a:visited {
-  color: #171717;
-  text-decoration:none;
-}
 a:focus{
   color: #171717;
   text-decoration:none;
