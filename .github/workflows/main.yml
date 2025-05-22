@@ -11,45 +11,45 @@ jobs:
     name: Run pull on remote server
     runs-on: ubuntu-latest
 
-    # Variables claras provenientes de Secrets
     env:
-      SSH_USER:       ${{ secrets.SSH_USER }}
-      SSH_HOST:       ${{ secrets.SSH_HOST }}
-      WORK_DIR:       ${{ secrets.WORK_DIR }}
-      MAIN_BRANCH:    ${{ secrets.MAIN_BRANCH }}
+      SSH_USER:    ${{ secrets.SSH_USER }}
+      SSH_HOST:    ${{ secrets.SSH_HOST }}
+      WORK_DIR:    ${{ secrets.WORK_DIR }}
+      MAIN_BRANCH: ${{ secrets.MAIN_BRANCH }}
 
     steps:
-      # 1. Trae tu repo local para tener el YAML y cualquier otro archivo necesario
-      - name: Checkout this repo
+      # 1. Obtener este repo para tener el YAML y posibles artefactos
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      # 2. Debug: imprime sólo las vars que realmente te importan
-      - name: Debug SSH-related env vars
-        run: |
-          echo "– SSH_USER:     $SSH_USER"
-          echo "– SSH_HOST:     $SSH_HOST"
-          echo "– WORK_DIR:     $WORK_DIR"
-          echo "– MAIN_BRANCH:  $MAIN_BRANCH"
-
-      # 3. Instalar la clave SSH en ~/.ssh e ingresa el host en known_hosts
+      # 2. Instalar la clave SSH (sin keyscan)
       - name: Install SSH key
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
 
-      # 4. Conectar por SSH y ejecuta checkout + pull dentro de la misma sesión
-      - name: Connect and pull from server
+      # 3. Verificar que SSH conecta correctamente
+      - name: Verify SSH connection
         run: |
-          ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
+          ssh -o StrictHostKeyChecking=no \
+              -i ~/.ssh/id_rsa \
+              $SSH_USER@$SSH_HOST exit
+
+      # 4. Conexión y pull todo en una sesión
+      - name: Connect and pull
+        run: |
+          ssh -o StrictHostKeyChecking=no \
+              -i ~/.ssh/id_rsa \
+              $SSH_USER@$SSH_HOST << 'EOF'
             set -e
             cd "$WORK_DIR"
             git checkout "$MAIN_BRANCH"
             git pull server "$MAIN_BRANCH"
           EOF
 
-      # 5. Limpieza de claves sensibles
-      - name: Cleanup SSH files
+      # 5. Limpieza de cualquier rastro sensible
+      - name: Cleanup
         run: rm -rf ~/.ssh
+
