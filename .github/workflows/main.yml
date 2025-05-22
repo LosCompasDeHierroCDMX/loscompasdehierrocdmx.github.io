@@ -11,15 +11,16 @@ jobs:
     
     steps:
     - name: install ssh keys
-      # https://stackoverflow.com/a/70447517
       run: |
+        set -e
         install -m 600 -D /dev/null ~/.ssh/id_rsa
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa || { echo "SSH key not set properly"; exit 1; }
+        ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts || { echo "SSH host not set properly"; exit 1; }
     - name: connect and pull
-      run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} &&\
-          git checkout ${{ secrets.MAIN_BRANCH }} &&\
-          git pull server ${{ secrets.MAIN_BRANCH }} &&\
-          exit"
+      run: |
+        ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} &&\
+        git checkout ${{ secrets.MAIN_BRANCH }} &&\
+        git pull server ${{ secrets.MAIN_BRANCH }} &&\
+        exit" || { echo "SSH connection or git commands failed"; exit 1; }
     - name: cleanup
       run: rm -rf ~/.ssh
