@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+    - name: debug
+      run: env | grep -i ssh>
     - name: install ssh keys
       run: |
         set -e
