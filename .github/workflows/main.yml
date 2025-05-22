@@ -1,28 +1,55 @@
+name: Pull from Server
+
 on:
   push:
     branches:
       - main
   workflow_dispatch:
-  
+
 jobs:
   run_pull:
-    name: run pull
+    name: Run pull on remote server
     runs-on: ubuntu-latest
-    
+
+    # Variables claras provenientes de Secrets
+    env:
+      SSH_USER:       ${{ secrets.SSH_USER }}
+      SSH_HOST:       ${{ secrets.SSH_HOST }}
+      WORK_DIR:       ${{ secrets.WORK_DIR }}
+      MAIN_BRANCH:    ${{ secrets.MAIN_BRANCH }}
+
     steps:
-    - name: debug
-      run: env | grep -i ssh>
-    - name: install ssh keys
-      run: |
-        set -e
-        install -m 600 -D /dev/null ~/.ssh/id_rsa
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa || { echo "SSH key not set properly"; exit 1; }
-        ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts || { echo "SSH host not set properly"; exit 1; }
-    - name: connect and pull
-      run: |
-        ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} &&\
-        git checkout ${{ secrets.MAIN_BRANCH }} &&\
-        git pull server ${{ secrets.MAIN_BRANCH }} &&\
-        exit" || { echo "SSH connection or git commands failed"; exit 1; }
-    - name: cleanup
-      run: rm -rf ~/.ssh
+      # 1. Trae tu repo local para tener el YAML y cualquier otro archivo necesario
+      - name: Checkout this repo
+        uses: actions/checkout@v3
+
+      # 2. Debug: imprime sólo las vars que realmente te importan
+      - name: Debug SSH-related env vars
+        run: |
+          echo "– SSH_USER:     $SSH_USER"
+          echo "– SSH_HOST:     $SSH_HOST"
+          echo "– WORK_DIR:     $WORK_DIR"
+          echo "– MAIN_BRANCH:  $MAIN_BRANCH"
+
+      # 3. Instalar la clave SSH en ~/.ssh e ingresa el host en known_hosts
+      - name: Install SSH key
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+
+      # 4. Conectar por SSH y ejecuta checkout + pull dentro de la misma sesión
+      - name: Connect and pull from server
+        run: |
+          ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
+            set -e
+            cd "$WORK_DIR"
+            git checkout "$MAIN_BRANCH"
+            git pull server "$MAIN_BRANCH"
+          EOF
+
+      # 5. Limpieza de claves sensibles
+      - name: Cleanup SSH files
+        run: rm -rf ~/.ssh
