@@ -1,25 +1,51 @@
+name: Pull from Server
+
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   workflow_dispatch:
-  
+
 jobs:
   run_pull:
-    name: run pull
     runs-on: ubuntu-latest
-    
+    # Exportamos también el puerto
+    env:
+      SSH_USER:    ${{ secrets.SSH_USER }}
+      SSH_HOST:    ${{ secrets.SSH_HOST }}
+      SSH_PORT:    ${{ secrets.SSH_PORT }}
+      WORK_DIR:    ${{ secrets.WORK_DIR }}
+      MAIN_BRANCH: ${{ secrets.MAIN_BRANCH }}
+
     steps:
-    - name: install ssh keys
-      # https://stackoverflow.com/a/70447517
-      run: |
-        install -m 600 -D /dev/null ~/.ssh/id_rsa
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
-    - name: connect and pull
-      run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} &&\
-          git checkout ${{ secrets.MAIN_BRANCH }} &&\
-          git pull server ${{ secrets.MAIN_BRANCH }} &&\
-          exit"
-    - name: cleanup
-      run: rm -rf ~/.ssh
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install SSH key
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Verify SSH connection
+        run: |
+          ssh -o StrictHostKeyChecking=no \
+              -i ~/.ssh/id_rsa \
+              -p $SSH_PORT \
+              $SSH_USER@$SSH_HOST exit
+
+      - name: Connect and pull
+        run: |
+          ssh -o StrictHostKeyChecking=no \
+              -i ~/.ssh/id_rsa \
+              -p $SSH_PORT \
+              $SSH_USER@$SSH_HOST << 'EOF'
+            set -e
+            cd "$WORK_DIR"
+            git checkout "$MAIN_BRANCH"
+            git pull server "$MAIN_BRANCH"
+          EOF
+
+      - name: Cleanup
+        run: rm -rf ~/.ssh
+
